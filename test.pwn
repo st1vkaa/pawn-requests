@@ -226,6 +226,34 @@ Test:InvalidClient() {
 
 
 // -
+// RequestJSON - empty response body
+// -
+
+
+new Request:OnEmptyJson_ID;
+Test:EmptyJsonResponse() {
+    new RequestsClient:client = RequestsClient("http://httpbin.org/", RequestHeaders());
+    OnEmptyJson_ID = RequestJSON(
+        client,
+        "status/204",
+        HTTP_METHOD_POST,
+        "OnEmptyJson",
+        JsonObject("content", JsonString("hello")),
+        .headers = RequestHeaders()
+    );
+}
+forward OnEmptyJson(Request:id, E_HTTP_STATUS:status, Node:node);
+public OnEmptyJson(Request:id, E_HTTP_STATUS:status, Node:node) {
+    print("*** Test OnEmptyJson\n");
+
+    ASSERT(id == OnEmptyJson_ID);
+    ASSERT(status == HTTP_STATUS_NO_CONTENT);
+
+    print("\nPASS!");
+}
+
+
+// -
 // WebSocket Tests
 // -
 

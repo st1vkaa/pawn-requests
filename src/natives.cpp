@@ -138,15 +138,24 @@ void Natives::processTick(std::set<AMX *> amx_List)
         case Impl::E_CONTENT_TYPE::json:
         {
             cell id = -1;
-            try
+            // empty body is a valid response so treat it as null json
+            if (response.rawBody.empty())
             {
-                json::value *obj = new json::value;
-                *obj = json::value::parse(utility::conversions::to_string_t(response.rawBody));
+                json::value *obj = new json::value(json::value::null());
                 id = JSON::Alloc(obj);
             }
-            catch (std::exception e)
+            else
             {
-                logprintf("ERROR: failed to parse response as JSON: '%s'", response.rawBody.c_str());
+                try
+                {
+                    json::value *obj = new json::value;
+                    *obj = json::value::parse(utility::conversions::to_string_t(response.rawBody));
+                    id = JSON::Alloc(obj);
+                }
+                catch (std::exception e)
+                {
+                    logprintf("ERROR: failed to parse response as JSON: '%s'", response.rawBody.c_str());
+                }
             }
 
             amx_Push(currentAmx, id);
