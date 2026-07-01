@@ -92,7 +92,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install Conan
-        run: pip install "conan<2"
+        run: pip install "conan<2" "cmake<4"
 
       - name: Configure Conan profile
         run: conan profile new default --detect --force
