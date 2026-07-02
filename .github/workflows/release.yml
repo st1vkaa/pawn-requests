@@ -28,7 +28,7 @@ jobs:
           path: releases/pawn-requests-linux.zip
 
   windows-build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     env:
       CONAN_VCVARS_VER: "14.4"
       VCVARS_VER: "14.4"
@@ -79,7 +79,7 @@ jobs:
             New-Item -ItemType Junction -Path $alias -Target $target.FullName | Out-Null
           }
       - name: Configure CMake
-        run: cmake -S . -B build -A Win32 -DCMAKE_BUILD_TYPE=Release -T v143 -DCONAN_DISABLE_CHECK_COMPILER=ON
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE=Release -T v143 -DCONAN_DISABLE_CHECK_COMPILER=ON
       - name: Build
         run: cmake --build build --config Release
       - name: Package Windows release
