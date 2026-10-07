@@ -15,4 +15,4 @@
 	url = https://github.com/martinmoene/span-lite.git
 [submodule "subhook"]
 	path = subhook
-	url = https://github.com/Zeex/subhook.git
+	url = https://github.com/Y-Less/subhook.git
