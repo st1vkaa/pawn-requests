@@ -1,0 +1,21 @@
+name: Debian 10 build
+
+on:
+  push:
+    branches: [debian10]
+  workflow_dispatch:
+
+jobs:
+  linux-buster:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build in debian:buster
+        run: |
+          docker run --rm -v "$PWD":/src -w /src debian:buster bash ci/build-buster.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pawn-requests-linux-debian10
+          path: out/
