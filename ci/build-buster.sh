@@ -32,6 +32,8 @@ echo "=== NEEDED"; objdump -p "$SO" | grep NEEDED
 echo "=== GLIBC";  objdump -T "$SO" | grep -oE 'GLIBC_2\.[0-9]+' | sort -t. -k2 -n -u
 echo "=== GLIBCXX"; objdump -T "$SO" | grep -oE 'GLIBCXX_3\.4\.[0-9]+' | sort -t. -k3 -n -u
 echo "=== entry points"; objdump -T "$SO" | grep -E ' (ComponentEntryPoint|Supports|Load|AmxLoad)$' || true
+annot "NEEDED: $(objdump -p "$SO" | grep NEEDED | awk '{print $2}' | tr '
+' ' ') | RAW: $(objdump -T "$SO" | grep '*UND*' | head -6)"
 echo "=== unresolved (non-system) symbols"
 UNRES=$(objdump -T "$SO" | grep '*UND*' | grep -vE '(GLIBC|GLIBCXX|CXXABI|GCC)_[0-9]' | grep -vE '^[0-9a-f]+ +w ' || true)
 echo "$UNRES"
