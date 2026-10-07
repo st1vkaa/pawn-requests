@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # sscanf (компонент open.mp + legacy-плагин) под Debian 10 buster: glibc <= 2.28, libstdc++ gcc 8.
 set -euxo pipefail
+annot() { local m="${1//'%'/'%25'}"; m="${m//$'
+'/'%0A'}"; echo "::error title=build::${m}"; }
+trap 'annot "failed at line $LINENO: $BASH_COMMAND"' ERR
 CMAKE_VERSION=3.25.1
 MAX_GLIBC_MINOR=28
 
@@ -20,7 +23,8 @@ cd /src
 gcc --version
 rm -rf build
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j"$(nproc)"
+cmake --build build -j"$(nproc)" > build.log 2>&1 || { annot "$(grep -iE "error|undefined" build.log | head -25)"; cat build.log; exit 1; }
+cat build.log
 SO=build/libsscanf.so
 test -f "$SO"
 
@@ -32,6 +36,8 @@ echo "=== unresolved (non-system) symbols"
 UNRES=$(objdump -T "$SO" | grep '*UND*' | grep -vE '(GLIBC|GLIBCXX|CXXABI|GCC)_[0-9]' | grep -vE '^[0-9a-f]+ +w ' || true)
 echo "$UNRES"
 if [ -n "$UNRES" ]; then
+    annot "unresolved: $(echo "$UNRES" | awk '{print $NF}' | head -40 | tr '
+' ' ')"
     echo "SScanF.so ссылается на неопределённые символы — на сервере будет symbol lookup error"
     exit 1
 fi
