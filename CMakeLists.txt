@@ -66,6 +66,7 @@ elseif(UNIX)
 		specifiers.cpp
 		sscanf.cpp
 		utils.cpp
+		error.cpp
 	)
 endif()
 

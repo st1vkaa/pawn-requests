@@ -28,6 +28,13 @@ echo "=== NEEDED"; objdump -p "$SO" | grep NEEDED
 echo "=== GLIBC";  objdump -T "$SO" | grep -oE 'GLIBC_2\.[0-9]+' | sort -t. -k2 -n -u
 echo "=== GLIBCXX"; objdump -T "$SO" | grep -oE 'GLIBCXX_3\.4\.[0-9]+' | sort -t. -k3 -n -u
 echo "=== entry points"; objdump -T "$SO" | grep -E ' (ComponentEntryPoint|Supports|Load|AmxLoad)$' || true
+echo "=== unresolved (non-system) symbols"
+UNRES=$(objdump -T "$SO" | grep '*UND*' | grep -vE '(GLIBC|GLIBCXX|CXXABI|GCC)_[0-9]' | grep -vE '^[0-9a-f]+ +w ' || true)
+echo "$UNRES"
+if [ -n "$UNRES" ]; then
+    echo "SScanF.so ссылается на неопределённые символы — на сервере будет symbol lookup error"
+    exit 1
+fi
 MAXV=$(objdump -T "$SO" | grep -oE 'GLIBC_2\.[0-9]+' | sort -t. -k2 -n -u | tail -1 | cut -d. -f2)
 [ "$MAXV" -le "$MAX_GLIBC_MINOR" ] || { echo "GLIBC_2.$MAXV > 2.$MAX_GLIBC_MINOR"; exit 1; }
 
