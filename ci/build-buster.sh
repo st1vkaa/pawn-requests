@@ -57,6 +57,13 @@ if [ "$MAXV" -gt "$MAX_GLIBC_MINOR" ]; then
     exit 1
 fi
 
+echo "=== exported (defined) dynamic symbols"
+objdump -T "$SO" | grep -v '*UND*' | tail -n +5
+if objdump -T "$SO" | grep -v '*UND*' | grep -qE '\b(SSL_|CRYPTO_|EVP_|BIO_|OPENSSL_|ERR_|boost|_ZN5boost)'; then
+    echo "requests.so экспортирует символы OpenSSL/boost — конфликт с omp-server"
+    exit 1
+fi
+
 rm -rf out && mkdir -p out/plugins out/includes
 cp "$SO" out/plugins/requests.so
 cp *.inc out/includes/

@@ -43,6 +43,10 @@ elseif(UNIX)
 	add_link_options(
 		"-static-libgcc"
 		"-static-libstdc++"
+		# omp-server экспортирует свой статический OpenSSL: без этого вызовы
+		# OpenSSL из плагина уходят в чужую версию и сервер падает в ssl_load_ciphers
+		"-Wl,--exclude-libs,ALL"
+		"-Wl,-Bsymbolic"
 	)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath='$ORIGIN'")
 endif()
