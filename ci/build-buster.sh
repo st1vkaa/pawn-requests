@@ -32,7 +32,7 @@ rm ./cmake-${CMAKE_VERSION}-linux-x86_64.sh
 
 cd /src
 gcc --version
-ldd --version | head -1
+ldd --version 2>&1 | sed -n 1p
 
 conan profile new default --detect --force
 # все зависимости (cpprestsdk, boost, openssl, zlib) собираем из исходников этим же gcc 8,
@@ -44,7 +44,7 @@ rm -rf build
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release -j"$(nproc)"
 
-SO=$(find build test/plugins -name requests.so -type f 2>/dev/null | head -1)
+SO=$(find build test/plugins -name requests.so -type f -print -quit 2>/dev/null || true)
 test -n "$SO"
 
 echo "=== NEEDED"
@@ -58,8 +58,10 @@ if [ "$MAXV" -gt "$MAX_GLIBC_MINOR" ]; then
 fi
 
 echo "=== exported (defined) dynamic symbols"
-objdump -T "$SO" | grep -v '*UND*' | tail -n +5
-if objdump -T "$SO" | grep -v '*UND*' | grep -qE '\b(SSL_|CRYPTO_|EVP_|BIO_|OPENSSL_|ERR_|boost|_ZN5boost)'; then
+EXPORTS=$(objdump -T "$SO" | grep -v '*UND*' || true)
+echo "$EXPORTS"
+BAD=$(echo "$EXPORTS" | grep -cE '\b(SSL_|CRYPTO_|EVP_|BIO_|OPENSSL_|ERR_|boost|_ZN5boost)' || true)
+if [ "$BAD" -ne 0 ]; then
     echo "requests.so экспортирует символы OpenSSL/boost — конфликт с omp-server"
     exit 1
 fi
