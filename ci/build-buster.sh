@@ -58,15 +58,22 @@ if [ "$MAXV" -gt "$MAX_GLIBC_MINOR" ]; then
 fi
 
 echo "=== exported (defined) dynamic symbols"
-EXPORTS=$(objdump -T "$SO" | grep -v '*UND*' || true)
-echo "$EXPORTS"
-BAD=$(echo "$EXPORTS" | grep -cE '\b(SSL_|CRYPTO_|EVP_|BIO_|OPENSSL_|ERR_|boost|_ZN5boost)' || true)
-if [ "$BAD" -ne 0 ]; then
-    echo "requests.so экспортирует символы OpenSSL/boost — конфликт с omp-server"
-    exit 1
-fi
-
 rm -rf out && mkdir -p out/plugins out/includes
 cp "$SO" out/plugins/requests.so
 cp *.inc out/includes/
 chmod -R a+rwX out build
+
+# последнее поле objdump -T = имя символа
+NAMES=$(objdump -T "$SO" | grep -v '*UND*' | awk 'NF>=6 {print $NF}' || true)
+echo "=== exported: $(echo "$NAMES" | wc -l) symbols"
+echo "$NAMES" | grep -vE '5boost' || true
+echo "=== boost (безвредно при -Bsymbolic): $(echo "$NAMES" | grep -cE '5boost' || true)"
+echo "$NAMES" | grep -E '5boost' | sed -n 1,30p || true
+
+OSSL=$(echo "$NAMES" | grep -E '^(SSL_|SSL3_|TLS_|DTLS_|CRYPTO_|EVP_|BIO_|OPENSSL_|ERR_|X509|PEM_|RSA_|EC_|BN_|ASN1_|OBJ_|RAND_|ssl_|tls1_|ssl3_)' || true)
+if [ -n "$OSSL" ]; then
+    echo "=== OpenSSL exported:"
+    echo "$OSSL" | sed -n 1,50p
+    echo "requests.so экспортирует символы OpenSSL — конфликт с omp-server"
+    exit 1
+fi

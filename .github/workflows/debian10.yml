@@ -16,6 +16,8 @@ jobs:
           docker run --rm -v "$PWD":/src -w /src debian:buster bash ci/build-buster.sh
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
+          if-no-files-found: warn
           name: pawn-requests-linux-debian10
           path: out/
